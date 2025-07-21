@@ -28,7 +28,7 @@ services:
       - JAEGER_AGENT_HOST=jaeger
       - JAEGER_AGENT_PORT=5775
     ports:
-      - "5000:5000"
+      - "5001:5000"
 
   # Service 2 
   service2:
@@ -38,5 +38,5 @@ services:
       - JAEGER_AGENT_HOST=jaeger
       - JAEGER_AGENT_PORT=5775
     ports:
-      - "5001:5001"
+      - "5002:5001"
 
