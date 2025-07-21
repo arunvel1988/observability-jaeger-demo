@@ -3,3 +3,4 @@ requests==2.25.1
 opentracing==2.4.0
 jaeger-client==4.4.0
 werkzeug==2.1.0
+six==1.16.0
