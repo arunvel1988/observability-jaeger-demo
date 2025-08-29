@@ -73,3 +73,61 @@ docker run -d --net=host --rm \
     --web.enable-admin-api && echo "Prometheus 0 US1 started!"
 ############################################################################
 
+docker run -d --net=host --rm \
+    -v $(pwd)/prometheus1_us1.yml:/etc/prometheus/prometheus.yml \
+    -v $(pwd)/prometheus1_us1_data:/prometheus \
+    -u root \
+    --name prometheus-1-us1 \
+    quay.io/prometheus/prometheus:v2.38.0 \
+    --config.file=/etc/prometheus/prometheus.yml \
+    --storage.tsdb.path=/prometheus \
+    --web.listen-address=:9092 \
+    --web.external-url=https://74576108b167-10-244-6-217-9092.saci.r.killercoda.com \
+    --web.enable-lifecycle \
+    --web.enable-admin-api && echo "Prometheus 1 US1 started!"
+####################################################################################
+global view and HA
+
+docker run --rm quay.io/thanos/thanos:v0.28.0 --help
+
+docker run -d --net=host --rm \
+    -v $(pwd)/prometheus0_eu1.yml:/etc/prometheus/prometheus.yml \
+    --name prometheus-0-sidecar-eu1 \
+    -u root \
+    quay.io/thanos/thanos:v0.28.0 \
+    sidecar \
+    --http-address 0.0.0.0:19090 \
+    --grpc-address 0.0.0.0:19190 \
+    --reloader.config-file /etc/prometheus/prometheus.yml \
+    --prometheus.url http://172.17.0.1:9090 && echo "Started sidecar for Prometheus 0 EU1"
+############################################
+
+
+
+docker run -d --net=host --rm \
+    -v $(pwd)/prometheus0_us1.yml:/etc/prometheus/prometheus.yml \
+    --name prometheus-0-sidecar-us1 \
+    -u root \
+    quay.io/thanos/thanos:v0.28.0 \
+    sidecar \
+    --http-address 0.0.0.0:19091 \
+    --grpc-address 0.0.0.0:19191 \
+    --reloader.config-file /etc/prometheus/prometheus.yml \
+    --prometheus.url http://172.17.0.1:9091 && echo "Started sidecar for Prometheus 0 US1"
+
+########################################################
+
+
+docker run -d --net=host --rm \
+    -v $(pwd)/prometheus1_us1.yml:/etc/prometheus/prometheus.yml \
+    --name prometheus-1-sidecar-us1 \
+    -u root \
+    quay.io/thanos/thanos:v0.28.0 \
+    sidecar \
+    --http-address 0.0.0.0:19092 \
+    --grpc-address 0.0.0.0:19192 \
+    --reloader.config-file /etc/prometheus/prometheus.yml \
+    --prometheus.url http://172.17.0.1:9092 && echo "Started sidecar for Prometheus 1 US1"
+######################################################################
+
+
