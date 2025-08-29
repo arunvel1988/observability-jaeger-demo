@@ -1,0 +1,46 @@
+############################################################################
+prometheus0_eu1.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: eu1
+    replica: 0
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['172.17.0.1:9090']
+############################################################################
+prometheus0_us1.yml
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: us1
+    replica: 0
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['172.17.0.1:9091','172.17.0.1:9092']
+############################################################################
+prometheus1_us1.yml
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: us1
+    replica: 1
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['172.17.0.1:9091','172.17.0.1:9092']
+
+
+############################################################################
+
+############################################################################
