@@ -43,4 +43,33 @@ scrape_configs:
 
 ############################################################################
 
+mkdir -p prometheus0_eu1_data prometheus0_us1_data prometheus1_us1_data
+
+docker run -d --net=host --rm \
+    -v $(pwd)/prometheus0_us1.yml:/etc/prometheus/prometheus.yml \
+    -v $(pwd)/prometheus0_us1_data:/prometheus \
+    -u root \
+    --name prometheus-0-us1 \
+    quay.io/prometheus/prometheus:v2.38.0 \
+    --config.file=/etc/prometheus/prometheus.yml \
+    --storage.tsdb.path=/prometheus \
+    --web.listen-address=:9091 \
+    --web.external-url=https://462959ddb085-10-244-7-37-9091.saci.r.killercoda.com \
+    --web.enable-lifecycle \
+    --web.enable-admin-api && echo "Prometheus 0 US1 started!"
 ############################################################################
+
+docker run -d --net=host --rm \
+    -v $(pwd)/prometheus0_us1.yml:/etc/prometheus/prometheus.yml \
+    -v $(pwd)/prometheus0_us1_data:/prometheus \
+    -u root \
+    --name prometheus-0-us1 \
+    quay.io/prometheus/prometheus:v2.38.0 \
+    --config.file=/etc/prometheus/prometheus.yml \
+    --storage.tsdb.path=/prometheus \
+    --web.listen-address=:9091 \
+    --web.external-url=https://462959ddb085-10-244-7-37-9091.saci.r.killercoda.com \
+    --web.enable-lifecycle \
+    --web.enable-admin-api && echo "Prometheus 0 US1 started!"
+############################################################################
+
