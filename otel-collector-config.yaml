@@ -1,0 +1,29 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+exporters:
+  tempo:
+    endpoint: "http://tempo:3200"
+    insecure: true
+
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+  
+  loki:
+    endpoint: "http://loki:3100/loki/api/v1/push"
+    insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [tempo]
+    metrics:
+      receivers: [otlp]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      exporters: [loki]
