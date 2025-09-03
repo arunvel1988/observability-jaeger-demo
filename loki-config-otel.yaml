@@ -6,7 +6,7 @@ server:
 ingester:
   wal:
     enabled: true
-    dir: /tmp/loki/wal
+    dir: /loki/wal   # changed
 
 schema_config:
   configs:
@@ -20,10 +20,10 @@ schema_config:
 
 storage_config:
   boltdb_shipper:
-    active_index_directory: /tmp/loki/index
+    active_index_directory: /loki/index   # changed
     shared_store: filesystem
   filesystem:
-    directory: /tmp/loki/chunks
+    directory: /loki/chunks   # changed
 
 limits_config:
   enforce_metric_name: false
