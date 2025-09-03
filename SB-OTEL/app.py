@@ -13,7 +13,8 @@ from opentelemetry.instrumentation.flask import FlaskInstrumentor
 
 # Logs
 from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs.export import BatchLogProcessor
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 
 # Metrics
