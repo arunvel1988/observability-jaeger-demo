@@ -5,13 +5,16 @@ receivers:
       http:
 
 exporters:
-  tempo:
-    endpoint: "http://tempo:3200"
+  # Export traces to Tempo via OTLP
+  otlp/tempo:
+    endpoint: "http://tempo:4318/v1/traces"
     insecure: true
 
+  # Export metrics to Prometheus
   prometheus:
     endpoint: "0.0.0.0:8889"
-  
+
+  # Export logs to Loki
   loki:
     endpoint: "http://loki:3100/loki/api/v1/push"
     insecure: true
@@ -20,7 +23,7 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      exporters: [tempo]
+      exporters: [otlp/tempo]
     metrics:
       receivers: [otlp]
       exporters: [prometheus]
