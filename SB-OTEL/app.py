@@ -6,7 +6,6 @@ import time
 from opentelemetry import trace, metrics
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
@@ -14,11 +13,10 @@ from opentelemetry.instrumentation.flask import FlaskInstrumentor
 # Logs
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
-
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 
 # Metrics
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
 
 app = Flask(__name__)
@@ -33,7 +31,8 @@ trace.set_tracer_provider(
 )
 tracer = trace.get_tracer(__name__)
 
-trace_exporter = OTLPSpanExporter(endpoint="http://tempo:4318/v1/traces")
+# Export traces to OTel Collector (then → Tempo)
+trace_exporter = OTLPSpanExporter(endpoint="http://otel-collector:4318/v1/traces")
 trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(trace_exporter))
 
 # Auto-instrument Flask
@@ -59,8 +58,11 @@ request_counter = meter.create_counter(
 logger_provider = LoggerProvider(
     resource=Resource.create({SERVICE_NAME: "service2"})
 )
-log_exporter = OTLPLogExporter(endpoint="http://tempo:4318/v1/logs")
-logger_provider.add_log_processor(BatchLogProcessor(log_exporter))
+
+# Export logs to OTel Collector (then → Loki)
+log_exporter = OTLPLogExporter(endpoint="http://otel-collector:4318/v1/logs")
+logger_provider.add_log_processor(BatchLogRecordProcessor(log_exporter))
+
 logger = logger_provider.get_logger("service2-logs")
 
 # --------------------------
@@ -69,10 +71,13 @@ logger = logger_provider.get_logger("service2-logs")
 @app.route("/")
 def index():
     request_counter.add(1, {"endpoint": "/"})
-    logger.emit({"body": "Service2 index endpoint called"})
+    logger.info("Service2 index endpoint called")
     with tracer.start_as_current_span("service2-span"):
         time.sleep(random.uniform(0.1, 0.5))
         return "Service 2 - Hello!"
 
+# --------------------------
+# Run Flask App
+# --------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5001)
