@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  # Tempo (for tracing backend)
+  tempo:
+    image: grafana/tempo:2.5.0
+    container_name: tempo
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"   # Tempo UI / metrics
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+
+  # Grafana (for viewing traces from Tempo)
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - tempo
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+
+  # Service 1
+  service1:
+    build: ./SA-TEMPO
+    container_name: service1
+    depends_on:
+      - service2
+      - tempo
+    ports:
+      - "5001:5000"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318/v1/traces
+
+  # Service 2
+  service2:
+    build: ./SB-TEMPO
+    container_name: service2
+    depends_on:
+      - tempo
+    ports:
+      - "5002:5001"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318/v1/traces
