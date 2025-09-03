@@ -16,7 +16,8 @@ from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 # Logs
 from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs.export import BatchLogProcessor
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 
 # Metrics
