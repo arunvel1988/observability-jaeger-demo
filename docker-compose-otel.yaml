@@ -19,7 +19,7 @@ services:
     container_name: tempo
     command: ["-config.file=/etc/tempo.yaml"]
     volumes:
-      - ./tempo.yaml:/etc/tempo.yaml
+      - ./tempo-otel.yaml:/etc/tempo.yaml
     ports:
       - "3200:3200"   # Tempo UI / metrics
 
@@ -38,7 +38,7 @@ services:
     container_name: loki
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
-      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - ./loki-config-otel.yaml:/etc/loki/local-config.yaml
     ports:
       - "3100:3100"
 
@@ -56,7 +56,7 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./datasource.yaml:/etc/grafana/provisioning/datasource.yaml
 
   # Service 1 (OTel instrumented)
   service1:
