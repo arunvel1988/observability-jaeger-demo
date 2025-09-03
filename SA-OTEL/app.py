@@ -64,7 +64,8 @@ logger_provider = LoggerProvider(
 
 # Send logs to OTel Collector (then → Loki)
 log_exporter = OTLPLogExporter(endpoint="http://otel-collector:4318/v1/logs")
-logger_provider.add_log_processor(BatchLogRecordProcessor(log_exporter))
+logger_provider.add_log_record_processor(BatchLogRecordProcessor(log_exporter))
+
 
 logger = logger_provider.get_logger("service1-logs")
 
