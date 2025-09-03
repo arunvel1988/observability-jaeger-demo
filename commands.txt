@@ -1,0 +1,35 @@
+localhost:3200 = tempo
+localhost:3000 = grafana
+
+localhost:5001 = service1
+localhost:5002 = service2
+
+###################################################################################################################
+
+
+{ resource.service.name = "service1" && name =~ "GET /|call-service2" }
+
+{ resource.service.name = "service1" }
+
+
+{ resource.service.name = "service2" }
+
+
+{ name = "call-service2" }
+
+
+{ name =~ "GET.*" }
+
+
+{ name =~ "GET /|call-service2" }
+
+{ resource.service.name = "service1" && name = "call-service2" }
+
+{ resource.service.name = "service2" && name =~ "GET.*" }
+
+
+{ duration > 200ms }
+
+
+{ resource.service.name = "service1" && duration < 500ms }
+
