@@ -1,0 +1,19 @@
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers: []
+
+ingester:
+  traces:
+    max_look_back_period: 1h
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo/traces
+
+limits:
+  ingestion_rate: 0
+  max_traces_per_user: 0
