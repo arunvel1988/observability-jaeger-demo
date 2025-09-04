@@ -39,7 +39,7 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - ./loki-config-otel.yaml:/etc/loki/local-config.yaml
-      - ./loki-data:/loki 
+      - loki-data:/loki
     ports:
       - "3100:3100"
 
@@ -85,3 +85,7 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
       - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://otel-collector:4318/v1/metrics
       - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel-collector:4318/v1/logs
+
+# Declare volumes
+volumes:
+  loki-data:
