@@ -89,3 +89,4 @@ services:
 # Declare volumes
 volumes:
   loki-data:
+    driver: local
