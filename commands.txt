@@ -41,8 +41,14 @@ localhost:5002 = service2
 
 { resource.service.name = "service1" && duration < 500ms }
 
+
+
 ############################################################################################################################################
 # Install requirements
+
+python3 -m venv venv
+source venv/bin/activate
+
 pip install flask requests opentelemetry-distro opentelemetry-exporter-otlp
 
 # Initialize OpenTelemetry
