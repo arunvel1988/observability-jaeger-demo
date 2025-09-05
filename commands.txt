@@ -41,3 +41,39 @@ localhost:5002 = service2
 
 { resource.service.name = "service1" && duration < 500ms }
 
+############################################################################################################################################
+# Install requirements
+pip install flask requests opentelemetry-distro opentelemetry-exporter-otlp
+
+# Initialize OpenTelemetry
+opentelemetry-bootstrap -a install
+
+# Run app with auto instrumentation
+opentelemetry-instrument \
+  --service_name checkout-service \
+  --traces_exporter console \
+  flask run --app app.py --port 5000
+
+
+app.py
+from flask import Flask, jsonify
+import requests
+
+app = Flask(__name__)
+
+@app.route("/checkout", methods=["POST"])
+def checkout():
+    # This external call will also be auto-instrumented
+    response = requests.post("https://httpbin.org/status/200")
+
+    return jsonify({
+        "status": "success" if response.status_code == 200 else "failed",
+        "payment_status": response.status_code
+    })
+
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)
+
+
+
+############################################################################################################################################
