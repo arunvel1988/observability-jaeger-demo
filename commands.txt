@@ -59,7 +59,15 @@ opentelemetry-instrument \
   --service_name checkout-service \
   --traces_exporter console \
   flask --app app run --host 0.0.0.0 --port 5000
+#######################################################################################################################
 
+opentelemetry-instrument \
+  --service_name checkout-service \
+  --traces_exporter otlp \
+  --metrics_exporter otlp \
+  flask --app app run --host 0.0.0.0 --port 5000
+
+###############################################################################################################################
 
 
 app.py
