@@ -86,7 +86,4 @@ services:
       - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://otel-collector:4318/v1/metrics
       - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel-collector:4318/v1/logs
 
-# Declare volumes
-volumes:
-  loki-data:
-    driver: local
+
