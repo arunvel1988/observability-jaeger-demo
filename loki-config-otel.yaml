@@ -25,5 +25,9 @@ storage_config:
   filesystem:
     directory: /loki/chunks   # changed
 
+compactor:
+  working_directory: /loki/compactor   # 👈 this is required
+  shared_store: filesystem
+
 limits_config:
   enforce_metric_name: false
