@@ -3,8 +3,8 @@ sudo chown -R 10001:10001 ./loki-data
 sudo chmod -R 775 ./loki-data
 
 
-docker-compose -f docker-compose-otel.yml up
-docker-compose -f docker-compose-otel.yml down --remove-orphans
+docker-compose -f docker-compose-otel.yaml up
+docker-compose -f docker-compose-otel.yaml down --remove-orphans
 ######################################################################################################################
 localhost:3200 = tempo
 localhost:3000 = grafana
