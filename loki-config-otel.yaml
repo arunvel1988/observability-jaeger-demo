@@ -6,7 +6,7 @@ server:
 ingester:
   wal:
     enabled: true
-    dir: /loki/wal   # changed
+    dir: /loki/wal   # correct
 
 schema_config:
   configs:
@@ -20,13 +20,14 @@ schema_config:
 
 storage_config:
   boltdb_shipper:
-    active_index_directory: /loki/index   # changed
+    active_index_directory: /loki/index   # correct
+    cache_location: /loki/cache           # 👈 required
     shared_store: filesystem
   filesystem:
-    directory: /loki/chunks   # changed
+    directory: /loki/chunks   # correct
 
 compactor:
-  working_directory: /loki/compactor   # 👈 this is required
+  working_directory: /loki/compactor   # correct
   shared_store: filesystem
 
 limits_config:
