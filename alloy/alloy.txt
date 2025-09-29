@@ -1,0 +1,92 @@
+#############################################################
+
+config.alloy
+
+
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+
+###########################################################
+
+docker run \
+  -v ./config.alloy:/etc/alloy/config.alloy \
+  -p 12345:12345 \
+  grafana/alloy:latest \
+    run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data \
+    /etc/alloy/config.alloy
+########################################################
+
+helm repo add grafana https://grafana.github.io/helm-charts
+
+helm repo update
+
+kubectl create namespace alloy
+
+helm install --namespace alloy alloy-release grafana/alloy
+
+kubectl get pods --namespace alloy
+
+##############################################################################
+
+
+
+alloy-values.yml
+
+helm upgrade --namespace alloy alloy-release grafana/alloy -f alloy-values.yml
+
+#####################################################################
+
+non-root users
+
+alloy:
+  securityContext:
+    runAsUser: 473
+    runAsGroup: 473
+
+configReloader:
+  securityContext:
+    # this is the UID of the "nobody" user that the configReloader image runs as
+    runAsUser: 65534
+    runAsGroup: 65534
+
+    ######################################################
+
+
+    alloy components monitoring
+
+    https://github.com/arunvel1988/alloy-scenarios.git
+
+    cd alloy-scenarios/docker-monitoring
+docker compose up -d
+http://localhost:12345/
+
+http://localhost:3000/explore/metrics
+################################################################
+for kubernetes components
+helm repo add grafana https://grafana.github.io/helm-charts
+
+kubectl create namespace meta && \
+kubectl create namespace prod
+
+helm install --values loki-values.yml loki grafana/loki -n meta
+
+helm install --values grafana-values.yml grafana grafana/grafana --namespace meta
+
+helm install --values ./k8s-monitoring-values.yml k8s grafana/k8s-monitoring -n meta --create-namespace
+
+export POD_NAME=$(kubectl get pods --namespace meta -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=grafana" -o jsonpath="{.items[0].metadata.name}")
+
+kubectl --namespace meta port-forward $POD_NAME 3000
+
+export POD_NAME=$(kubectl get pods --namespace meta -l "app.kubernetes.io/name=alloy-logs,app.kubernetes.io/instance=k8s" -o jsonpath="{.items[0].metadata.name}")
+
+kubectl --namespace meta port-forward $POD_NAME 12345
+
+helm install tempo grafana/tempo-distributed -n prod
+
+#############################################
+
+
