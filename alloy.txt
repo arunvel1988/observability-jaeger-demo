@@ -1,0 +1,35 @@
+#############################################################
+
+config.alloy
+
+
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+
+###########################################################
+
+docker run \
+  -v ./config.alloy:/etc/alloy/config.alloy \
+  -p 12345:12345 \
+  grafana/alloy:latest \
+    run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data \
+    /etc/alloy/config.alloy
+########################################################
+
+helm repo add grafana https://grafana.github.io/helm-charts
+
+helm repo update
+
+kubectl create namespace alloy
+
+helm install --namespace alloy alloy-release grafana/alloy
+
+kubectl get pods --namespace alloy
+
+##############################################################################
+
+
+
