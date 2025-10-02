@@ -101,6 +101,17 @@ URL	http://mimir:9009/prometheus if you used Docker / http://localhost:9009/prom
 
 ##########################################################################################################
 
+###################### mimir examples #####################################
+
+https://github.com/arunvel1988/mimir
+
+git clone https://github.com/arunvel1988/mimir.git
+cd mimir
+
+cd docs/sources/mimir/get-started/play-with-grafana-mimir/
+
+docker compose up -d
+
 
 #####################################################
 local binary (not with docker)
