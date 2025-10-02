@@ -1,0 +1,110 @@
+#############################################################################
+
+docker pull grafana/mimir:latest
+######################################################
+demo.yml
+
+# Do not use this configuration in production.
+# It is for demonstration purposes only.
+multitenancy_enabled: false
+
+blocks_storage:
+  backend: filesystem
+  bucket_store:
+    sync_dir: /tmp/mimir/tsdb-sync
+  filesystem:
+    dir: /tmp/mimir/data/tsdb
+  tsdb:
+    dir: /tmp/mimir/tsdb
+
+compactor:
+  data_dir: /tmp/mimir/compactor
+  sharding_ring:
+    kvstore:
+      store: memberlist
+
+distributor:
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: memberlist
+
+ingester:
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: memberlist
+    replication_factor: 1
+
+ruler_storage:
+  backend: filesystem
+  filesystem:
+    dir: /tmp/mimir/rules
+
+server:
+  http_listen_port: 9009
+  log_level: error
+
+store_gateway:
+  sharding_ring:
+    replication_factor: 1
+##################################################################
+
+docker network create grafanet
+
+docker run \
+  --rm \
+  --name mimir \
+  --network grafanet \
+  --publish 9009:9009 \
+  --volume "$(pwd)"/demo.yaml:/etc/mimir/demo.yaml grafana/mimir:latest \
+  --config.file=/etc/mimir/demo.yaml
+
+  ##############################################################################
+  write prometheus.yml to write to mimir
+  remote_write:
+  - url: http://localhost:9009/api/v1/push
+
+scrape_configs:
+  - job_name: prometheus
+    honor_labels: true
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  #################################################################################
+
+   write alloy config to write to mimir
+
+   prometheus.exporter.self "self_metrics" {
+}
+
+prometheus.scrape "self_scrape" {
+  targets    = prometheus.exporter.self.self_metrics.targets
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "http://localhost:9009/api/v1/push"
+  }
+}
+
+#########################################################################
+
+grafana ui
+docker run --rm --name=grafana --network=grafanet -p 3000:3000 grafana/grafana
+
+add data source
+
+Name	Mimir
+URL	http://mimir:9009/prometheus if you used Docker / http://localhost:9009/prometheus if you used local binary
+
+##########################################################################################################
+
+
+#####################################################
+local binary (not with docker)
+curl -fLo mimir https://github.com/grafana/mimir/releases/latest/download/mimir-linux-amd64
+chmod +x mimir
+###########################################################
+
