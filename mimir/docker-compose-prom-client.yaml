@@ -48,7 +48,7 @@ services:
     volumes:
       - ./config/grafana-provisioning-dashboards.yaml:/etc/grafana/provisioning/dashboards/provisioning-dashboards.yaml:ro
       - ./config/grafana-provisioning-datasources.yaml:/etc/grafana/provisioning/datasources/provisioning-datasources.yaml:ro
-      ./operations/flask/flask-app-metrics.json:/var/lib/grafana/dashboards/flask/flask-app-metrics.json:ro
+      ./operations/flask-app-metrics.json:/var/lib/grafana/dashboards/flask-app-metrics.json:ro
 
     ports:
       - 9000:3000
