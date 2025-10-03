@@ -1,0 +1,122 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "flask-metrics",
+    "title": "Flask Metrics Demo",
+    "tags": ["flask", "prometheus", "mimir"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "5s",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "Request Count",
+        "id": 1,
+        "datasource": "Mimir",
+        "targets": [
+          {
+            "expr": "flask_request_count_total",
+            "legendFormat": "{{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "short", "min": 0, "max": null },
+          { "format": "short", "min": 0, "max": null }
+        ]
+      },
+      {
+        "type": "graph",
+        "title": "Request Latency (seconds)",
+        "id": 2,
+        "datasource": "Mimir",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(flask_request_latency_seconds_bucket[1m])) by (le, endpoint))",
+            "legendFormat": "{{endpoint}} p95",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(flask_request_latency_seconds_bucket[1m])) by (le, endpoint))",
+            "legendFormat": "{{endpoint}} p50",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "min": 0, "max": null },
+          { "format": "short", "min": 0, "max": null }
+        ]
+      },
+      {
+        "type": "graph",
+        "title": "In-Progress Requests",
+        "id": 3,
+        "datasource": "Mimir",
+        "targets": [
+          {
+            "expr": "flask_inprogress_requests",
+            "legendFormat": "{{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "short", "min": 0, "max": null },
+          { "format": "short", "min": 0, "max": null }
+        ]
+      },
+      {
+        "type": "graph",
+        "title": "CPU Usage (%)",
+        "id": 4,
+        "datasource": "Mimir",
+        "targets": [
+          {
+            "expr": "flask_cpu_usage_percent",
+            "legendFormat": "CPU Usage",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "percent", "min": 0, "max": 100 },
+          { "format": "short", "min": 0, "max": null }
+        ]
+      },
+      {
+        "type": "graph",
+        "title": "Memory Usage (MB)",
+        "id": 5,
+        "datasource": "Mimir",
+        "targets": [
+          {
+            "expr": "flask_memory_usage_mb",
+            "legendFormat": "Memory Usage",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "bytes", "min": 0, "max": null },
+          { "format": "short", "min": 0, "max": null }
+        ]
+      },
+      {
+        "type": "graph",
+        "title": "Work Endpoint Duration (seconds)",
+        "id": 6,
+        "datasource": "Mimir",
+        "targets": [
+          {
+            "expr": "flask_work_time_seconds_sum / max(flask_work_time_seconds_count, 1)",
+            "legendFormat": "avg duration",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "min": 0, "max": null },
+          { "format": "short", "min": 0, "max": null }
+        ]
+      }
+    ]
+  },
+  "overwrite": true
+}
