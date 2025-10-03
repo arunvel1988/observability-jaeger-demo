@@ -14,7 +14,7 @@ services:
 
   flask-app:
     build: ./flask-app
-    container_name: flask-app
+    hostname: flask-app
     ports:
       - "5000:5000"
     networks:
