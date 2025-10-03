@@ -34,6 +34,7 @@ services:
       - ./operations/mimir-tenants.json:/var/lib/grafana/dashboards/mimir-tenants.json:ro
       - ./operations/mimir-top-tenants.json:/var/lib/grafana/dashboards/mimir-top-tenants.json:ro
       - ./operations/mimir-writes.json:/var/lib/grafana/dashboards/mimir-writes.json:ro
+      - ./operations/flask-app-metrics.json:/var/lib/grafana/dashboards/flask-app-metrics.json:ro
     ports:
       - 9000:3000
 
