@@ -1,122 +1,129 @@
 {
   "dashboard": {
     "id": null,
-    "uid": "flask-metrics",
+    "uid": "flask-metrics-demo",
     "title": "Flask Metrics Demo",
-    "tags": ["flask", "prometheus", "mimir"],
+    "tags": ["flask", "prometheus", "demo"],
     "timezone": "browser",
     "schemaVersion": 36,
     "version": 1,
     "refresh": "5s",
     "panels": [
       {
-        "type": "graph",
-        "title": "Request Count",
-        "id": 1,
-        "datasource": "Mimir",
-        "targets": [
-          {
-            "expr": "flask_request_count_total",
-            "legendFormat": "{{endpoint}}",
-            "refId": "A"
-          }
-        ],
-        "yaxes": [
-          { "format": "short", "min": 0, "max": null },
-          { "format": "short", "min": 0, "max": null }
-        ]
-      },
-      {
-        "type": "graph",
-        "title": "Request Latency (seconds)",
-        "id": 2,
-        "datasource": "Mimir",
-        "targets": [
-          {
-            "expr": "histogram_quantile(0.95, sum(rate(flask_request_latency_seconds_bucket[1m])) by (le, endpoint))",
-            "legendFormat": "{{endpoint}} p95",
-            "refId": "A"
-          },
-          {
-            "expr": "histogram_quantile(0.50, sum(rate(flask_request_latency_seconds_bucket[1m])) by (le, endpoint))",
-            "legendFormat": "{{endpoint}} p50",
-            "refId": "B"
-          }
-        ],
-        "yaxes": [
-          { "format": "s", "min": 0, "max": null },
-          { "format": "short", "min": 0, "max": null }
-        ]
-      },
-      {
-        "type": "graph",
-        "title": "In-Progress Requests",
-        "id": 3,
-        "datasource": "Mimir",
-        "targets": [
-          {
-            "expr": "flask_inprogress_requests",
-            "legendFormat": "{{endpoint}}",
-            "refId": "A"
-          }
-        ],
-        "yaxes": [
-          { "format": "short", "min": 0, "max": null },
-          { "format": "short", "min": 0, "max": null }
-        ]
-      },
-      {
-        "type": "graph",
+        "type": "timeseries",
         "title": "CPU Usage (%)",
-        "id": 4,
-        "datasource": "Mimir",
+        "id": 1,
+        "datasource": "$datasource",
         "targets": [
           {
             "expr": "flask_cpu_usage_percent",
-            "legendFormat": "CPU Usage",
-            "refId": "A"
+            "legendFormat": "PID {{pid}}",
+            "format": "time_series"
           }
         ],
-        "yaxes": [
-          { "format": "percent", "min": 0, "max": 100 },
-          { "format": "short", "min": 0, "max": null }
-        ]
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        }
       },
       {
-        "type": "graph",
+        "type": "timeseries",
         "title": "Memory Usage (MB)",
-        "id": 5,
-        "datasource": "Mimir",
+        "id": 2,
+        "datasource": "$datasource",
         "targets": [
           {
             "expr": "flask_memory_usage_mb",
-            "legendFormat": "Memory Usage",
-            "refId": "A"
+            "legendFormat": "PID {{pid}}",
+            "format": "time_series"
           }
         ],
-        "yaxes": [
-          { "format": "bytes", "min": 0, "max": null },
-          { "format": "short", "min": 0, "max": null }
-        ]
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes",
+            "min": 0
+          }
+        }
       },
       {
-        "type": "graph",
-        "title": "Work Endpoint Duration (seconds)",
-        "id": 6,
-        "datasource": "Mimir",
+        "type": "timeseries",
+        "title": "Requests in Progress",
+        "id": 3,
+        "datasource": "$datasource",
         "targets": [
           {
-            "expr": "flask_work_time_seconds_sum / max(flask_work_time_seconds_count, 1)",
-            "legendFormat": "avg duration",
-            "refId": "A"
+            "expr": "flask_inprogress_requests",
+            "legendFormat": "Endpoint {{endpoint}}",
+            "format": "time_series"
           }
         ],
-        "yaxes": [
-          { "format": "s", "min": 0, "max": null },
-          { "format": "short", "min": 0, "max": null }
-        ]
+        "fieldConfig": {
+          "defaults": {
+            "min": 0
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Request Count",
+        "id": 4,
+        "datasource": "$datasource",
+        "targets": [
+          {
+            "expr": "flask_request_count_total",
+            "legendFormat": "Endpoint {{endpoint}}",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Request Latency (seconds)",
+        "id": 5,
+        "datasource": "$datasource",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(flask_request_latency_seconds_bucket[1m])) by (le, endpoint))",
+            "legendFormat": "P95 {{endpoint}}",
+            "format": "time_series"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(flask_request_latency_seconds_bucket[1m])) by (le, endpoint))",
+            "legendFormat": "P50 {{endpoint}}",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "min": 0
+          }
+        }
       }
-    ]
+    ],
+    "templating": {
+      "list": [
+        {
+          "type": "datasource",
+          "name": "datasource",
+          "label": "Prometheus Datasource",
+          "current": {
+            "text": "Prometheus",
+            "value": "Prometheus"
+          },
+          "hide": 0
+        }
+      ]
+    }
   },
   "overwrite": true
 }
