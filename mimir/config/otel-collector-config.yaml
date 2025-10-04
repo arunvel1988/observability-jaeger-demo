@@ -8,11 +8,6 @@ processors:
   batch:
 
 exporters:
-  # Local scrape endpoint for debugging
-  prometheus:
-    endpoint: "0.0.0.0:8889"
-
-  # Correct exporter for Mimir
   prometheusremotewrite/mimir:
     endpoint: "http://load-balancer:9009/api/v1/push"
     headers:
@@ -20,7 +15,7 @@ exporters:
 
 service:
   pipelines:
-    metrics/otlp:
+    metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [prometheusremotewrite/mimir, prometheus]
+      exporters: [prometheusremotewrite/mimir]
