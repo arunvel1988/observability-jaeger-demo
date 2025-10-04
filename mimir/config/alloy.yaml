@@ -1,0 +1,21 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+exporters:
+  prometheusremotewrite/mimir:
+    endpoint: "http://load-balancer:9009/api/v1/push"
+    headers:
+      X-Scope-OrgID: demo
+
+processors:
+  batch:
+
+service:
+  pipelines:
+    metrics/otlp:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheusremotewrite/mimir, prometheus]
