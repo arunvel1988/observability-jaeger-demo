@@ -12,7 +12,10 @@
       "type": "timeseries",
       "title": "CPU Usage (%)",
       "id": 1,
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
       "targets": [
         {
           "expr": "flask_cpu_usage_percent",
@@ -32,7 +35,10 @@
       "type": "timeseries",
       "title": "Memory Usage (MB)",
       "id": 2,
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
       "targets": [
         {
           "expr": "flask_memory_usage_mb",
@@ -51,7 +57,10 @@
       "type": "timeseries",
       "title": "Requests in Progress",
       "id": 3,
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
       "targets": [
         {
           "expr": "flask_inprogress_requests",
@@ -69,7 +78,10 @@
       "type": "timeseries",
       "title": "Request Count",
       "id": 4,
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
       "targets": [
         {
           "expr": "flask_request_count_total",
@@ -88,7 +100,10 @@
       "type": "timeseries",
       "title": "Request Latency (seconds)",
       "id": 5,
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
       "targets": [
         {
           "expr": "histogram_quantile(0.95, sum(rate(flask_request_latency_seconds_bucket[1m])) by (le, endpoint))",
@@ -115,9 +130,10 @@
         "type": "datasource",
         "name": "datasource",
         "label": "Prometheus Datasource",
+        "query": "prometheus",
         "current": {
-          "text": "Prometheus",
-          "value": "Prometheus"
+          "text": "Mimir",
+          "value": "Mimir"
         },
         "hide": 0
       }
