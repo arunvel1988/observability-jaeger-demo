@@ -1,8 +1,5 @@
 version: "3.8"
 services:
-  # --------------------
-  # MinIO for Mimir storage
-  # --------------------
   minio:
     image: minio/minio
     entrypoint: [""]
@@ -15,9 +12,6 @@ services:
     networks:
       - monitoring
 
-  # --------------------
-  # Flask App with OpenTelemetry
-  # --------------------
   flask-app:
     build: ./flask-app-otel
     environment:
@@ -31,81 +25,50 @@ services:
     depends_on:
       - otel-collector
 
-  # --------------------
-  # OpenTelemetry Collector
-  # --------------------
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
-      - "4317:4317"   # OTLP gRPC for metrics & traces
-      - "8888:8888"   # Collector Prometheus scrape endpoint
+      - "4317:4317"   # OTLP gRPC
+      - "8888:8888"   # optional: Prometheus scrape endpoint
     networks:
       - monitoring
     depends_on:
-      - flask-app
       - mimir-1
       - mimir-2
       - mimir-3
 
-  # --------------------
-  # Prometheus
-  # --------------------
   prometheus:
     image: prom/prometheus:latest
     command:
       - --config.file=/etc/prometheus/prometheus-otel.yaml
-      - --log.level=error
       - --storage.tsdb.path=/prometheus
-      - --web.console.libraries=/usr/share/prometheus/console_libraries
-      - --web.console.templates=/usr/share/prometheus/consoles
     volumes:
       - ./config/prometheus-otel.yaml:/etc/prometheus/prometheus.yml
       - ./operations/rules.yaml:/etc/prometheus/rules.yaml
-    depends_on:
-      - flask-app
-      - mimir-1
-      - mimir-2
-      - mimir-3
-      - otel-collector
     networks:
       - monitoring
+    depends_on:
+      - otel-collector
 
-  # --------------------
-  # Grafana
-  # --------------------
   grafana:
     image: grafana/grafana:latest
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
-      GF_USERS_DEFAULT_THEME: light
     volumes:
       - ./config/grafana-provisioning-dashboards.yaml:/etc/grafana/provisioning/dashboards/provisioning-dashboards.yaml:ro
       - ./config/grafana-provisioning-datasources.yaml:/etc/grafana/provisioning/datasources/provisioning-datasources.yaml:ro
       - ./operations/flask-app-metrics.json:/var/lib/grafana/dashboards/flask-app-metrics.json:ro
-      - ./operations/mimir-alertmanager.json:/var/lib/grafana/dashboards/mimir-alertmanager.json:ro
-      - ./operations/mimir-compactor.json:/var/lib/grafana/dashboards/mimir-compactor.json:ro
-      - ./operations/mimir-object-store.json:/var/lib/grafana/dashboards/mimir-object-store.json:ro
-      - ./operations/mimir-overrides.json:/var/lib/grafana/dashboards/mimir-overrides.json:ro
-      - ./operations/mimir-queries.json:/var/lib/grafana/dashboards/mimir-queries.json:ro
-      - ./operations/mimir-reads.json:/var/lib/grafana/dashboards/mimir-reads.json:ro
-      - ./operations/mimir-ruler.json:/var/lib/grafana/dashboards/mimir-ruler.json:ro
-      - ./operations/mimir-tenants.json:/var/lib/grafana/dashboards/mimir-tenants.json:ro
-      - ./operations/mimir-top-tenants.json:/var/lib/grafana/dashboards/mimir-top-tenants.json:ro
-      - ./operations/mimir-writes.json:/var/lib/grafana/dashboards/mimir-writes.json:ro
     ports:
-      - 9000:3000
-    depends_on:
-      - prometheus
+      - "9000:3000"
     networks:
       - monitoring
+    depends_on:
+      - prometheus
 
-  # --------------------
-  # Nginx Load Balancer
-  # --------------------
   load-balancer:
     image: nginx:latest
     volumes:
@@ -119,9 +82,6 @@ services:
     networks:
       - monitoring
 
-  # --------------------
-  # Mimir 3 Nodes
-  # --------------------
   mimir-1:
     image: grafana/mimir:latest
     command: ["-config.file=/etc/mimir.yaml"]
