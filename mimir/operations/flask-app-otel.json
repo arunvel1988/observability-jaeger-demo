@@ -12,98 +12,63 @@
       "type": "timeseries",
       "title": "Requests in Progress",
       "id": 1,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "mimir-ds"
-      },
+      "datasource": {"type": "prometheus", "uid": "mimir-ds"},
       "targets": [
-        {
-          "expr": "flask_inprogress_requests",
-          "legendFormat": "Endpoint {{endpoint}}",
-          "format": "time_series"
-        }
+        {"expr": "flask_inprogress_requests_Requests_in_progress", "legendFormat": "Endpoint {{endpoint}}", "format": "time_series"},
+        {"expr": "http_server_active_requests", "legendFormat": "HTTP Server Active Requests", "format": "time_series"}
       ],
-      "fieldConfig": {
-        "defaults": {
-          "min": 0
-        }
-      }
+      "fieldConfig": {"defaults": {"min": 0}}
     },
     {
       "type": "timeseries",
       "title": "Request Count",
       "id": 2,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "mimir-ds"
-      },
+      "datasource": {"type": "prometheus", "uid": "mimir-ds"},
       "targets": [
-        {
-          "expr": "flask_request_count_total",
-          "legendFormat": "Endpoint {{endpoint}}",
-          "format": "time_series"
-        }
+        {"expr": "flask_request_count_Total_requests_total", "legendFormat": "Endpoint {{endpoint}}", "format": "time_series"}
       ],
-      "fieldConfig": {
-        "defaults": {
-          "min": 0,
-          "unit": "short"
-        }
-      }
+      "fieldConfig": {"defaults": {"min": 0, "unit": "short"}}
     },
     {
       "type": "timeseries",
       "title": "Request Latency (seconds)",
       "id": 3,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "mimir-ds"
-      },
+      "datasource": {"type": "prometheus", "uid": "mimir-ds"},
       "targets": [
-        {
-          "expr": "histogram_quantile(0.95, sum(rate(flask_request_latency_seconds_bucket[1m])) by (le, endpoint))",
-          "legendFormat": "P95 {{endpoint}}",
-          "format": "time_series"
-        },
-        {
-          "expr": "histogram_quantile(0.50, sum(rate(flask_request_latency_seconds_bucket[1m])) by (le, endpoint))",
-          "legendFormat": "P50 {{endpoint}}",
-          "format": "time_series"
-        }
+        {"expr": "histogram_quantile(0.95, sum(rate(flask_request_latency_seconds_Request_latency_bucket[1m])) by (le, endpoint))", "legendFormat": "P95 {{endpoint}}", "format": "time_series"},
+        {"expr": "histogram_quantile(0.50, sum(rate(flask_request_latency_seconds_Request_latency_bucket[1m])) by (le, endpoint))", "legendFormat": "P50 {{endpoint}}", "format": "time_series"},
+        {"expr": "histogram_quantile(0.95, sum(rate(http_server_duration_milliseconds_bucket[1m])) by (le, handler))", "legendFormat": "HTTP P95 {{handler}}", "format": "time_series"},
+        {"expr": "histogram_quantile(0.50, sum(rate(http_server_duration_milliseconds_bucket[1m])) by (le, handler))", "legendFormat": "HTTP P50 {{handler}}", "format": "time_series"}
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "min": 0
-        }
-      }
+      "fieldConfig": {"defaults": {"unit": "s", "min": 0}}
     },
     {
       "type": "timeseries",
       "title": "Work Endpoint Duration (seconds)",
       "id": 4,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "mimir-ds"
-      },
+      "datasource": {"type": "prometheus", "uid": "mimir-ds"},
       "targets": [
-        {
-          "expr": "histogram_quantile(0.95, sum(rate(flask_work_time_seconds_bucket[1m])) by (le, endpoint))",
-          "legendFormat": "P95 {{endpoint}}",
-          "format": "time_series"
-        },
-        {
-          "expr": "histogram_quantile(0.50, sum(rate(flask_work_time_seconds_bucket[1m])) by (le, endpoint))",
-          "legendFormat": "P50 {{endpoint}}",
-          "format": "time_series"
-        }
+        {"expr": "histogram_quantile(0.95, sum(rate(flask_work_time_seconds_Work_endpoint_duration_bucket[1m])) by (le, endpoint))", "legendFormat": "P95 {{endpoint}}", "format": "time_series"},
+        {"expr": "histogram_quantile(0.50, sum(rate(flask_work_time_seconds_Work_endpoint_duration_bucket[1m])) by (le, endpoint))", "legendFormat": "P50 {{endpoint}}", "format": "time_series"},
+        {"expr": "histogram_quantile(0.95, sum(rate(http_server_duration_milliseconds_bucket[1m])) by (le, handler))", "legendFormat": "HTTP Work P95 {{handler}}", "format": "time_series"},
+        {"expr": "histogram_quantile(0.50, sum(rate(http_server_duration_milliseconds_bucket[1m])) by (le, handler))", "legendFormat": "HTTP Work P50 {{handler}}", "format": "time_series"}
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "min": 0
-        }
-      }
+      "fieldConfig": {"defaults": {"unit": "s", "min": 0}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Request Latency Count & Sum",
+      "id": 5,
+      "datasource": {"type": "prometheus", "uid": "mimir-ds"},
+      "targets": [
+        {"expr": "flask_request_latency_seconds_Request_latency_count", "legendFormat": "Count {{endpoint}}", "format": "time_series"},
+        {"expr": "flask_request_latency_seconds_Request_latency_sum", "legendFormat": "Sum {{endpoint}}", "format": "time_series"},
+        {"expr": "http_server_duration_milliseconds_count", "legendFormat": "HTTP Count {{handler}}", "format": "time_series"},
+        {"expr": "http_server_duration_milliseconds_sum", "legendFormat": "HTTP Sum {{handler}}", "format": "time_series"},
+        {"expr": "flask_work_time_seconds_Work_endpoint_duration_count", "legendFormat": "Work Count {{endpoint}}", "format": "time_series"},
+        {"expr": "flask_work_time_seconds_Work_endpoint_duration_sum", "legendFormat": "Work Sum {{endpoint}}", "format": "time_series"}
+      ],
+      "fieldConfig": {"defaults": {"min": 0}}
     }
   ],
   "templating": {
@@ -113,10 +78,7 @@
         "name": "datasource",
         "label": "Prometheus Datasource",
         "query": "prometheus",
-        "current": {
-          "text": "Mimir",
-          "value": "mimir-ds"
-        },
+        "current": {"text": "Mimir", "value": "mimir-ds"},
         "hide": 0
       }
     ]
