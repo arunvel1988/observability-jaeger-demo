@@ -54,7 +54,15 @@ def home():
     logger.info("Home endpoint hit", extra={"latency": duration})
     IN_PROGRESS.labels(endpoint=endpoint).dec()
 
-    return "Hello from Flask Metrics Demo!"
+    # HTML with links
+    return """
+    <h1>Hello from Flask Metrics Demo!</h1>
+    <ul>
+        <li><a href="/metrics">Metrics</a></li>
+        <li><a href="/work">Work</a></li>
+        <li><a href="/error">Error</a></li>
+    </ul>
+    """
 
 @app.route("/work")
 def work():
