@@ -1,3 +1,4 @@
+# config/otel-collector-config.yaml
 receivers:
   otlp:
     protocols:
@@ -6,15 +7,18 @@ receivers:
 
 exporters:
   prometheus:
-    endpoint: "0.0.0.0:8888"
-
-  prometheusremotewrite/mimir:
-    endpoint: "http://load-balancer:9009/api/v1/push"
+    endpoint: "0.0.0.0:8888" # optional scrape endpoint
+  otlp/mimir:
+    endpoint: "http://load-balancer:9009" # your Mimir load balancer
     headers:
-      X-Scope-OrgID: demo
+      "X-Scope-OrgID": "demo"
+
+processors:
+  batch:
 
 service:
   pipelines:
-    metrics:
+    metrics/otlp:
       receivers: [otlp]
-      exporters: [prometheus, prometheusremotewrite/mimir]
+      processors: [batch]
+      exporters: [otlp/mimir, prometheus]
