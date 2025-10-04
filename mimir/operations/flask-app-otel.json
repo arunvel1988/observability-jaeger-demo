@@ -78,7 +78,7 @@
         "name": "datasource",
         "label": "Prometheus Datasource",
         "query": "prometheus",
-        "current": {"text": "Mimir", "value": "mimir-ds"},
+        "current": {"text": "Mimir", "value": "Mimir"},
         "hide": 0
       }
     ]
