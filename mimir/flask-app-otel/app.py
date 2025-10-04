@@ -1,72 +1,61 @@
 import time
 import random
 import logging
-import sys
 from flask import Flask, Response
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
+from prometheus_client import make_wsgi_app
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
-# ----------------
-# Flask Setup
-# ----------------
+# Flask app
 app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-logger = logging.getLogger("flask-app")
+logging.basicConfig(level=logging.INFO)
 
-# ----------------
-# OpenTelemetry Metrics Setup
-# ----------------
-# This will expose a Prometheus scrape endpoint
-prom_reader = PrometheusMetricReader()
-provider = MeterProvider(metric_readers=[prom_reader])
+# OTel Metrics
+reader = PrometheusMetricReader()
+provider = MeterProvider(metric_readers=[reader])
 metrics.set_meter_provider(provider)
 meter = metrics.get_meter(__name__)
 
-# ----------------
-# Metrics Definitions
-# ----------------
-REQUEST_COUNT = meter.create_counter("flask_request_count_total", description="Total requests")
-REQUEST_LATENCY = meter.create_histogram("flask_request_latency_seconds", description="Request latency in seconds")
-IN_PROGRESS = meter.create_up_down_counter("flask_inprogress_requests", description="Requests in progress")
+# Metrics definitions
+REQUEST_COUNT = meter.create_counter("flask_request_count_total", "Total requests")
+REQUEST_LATENCY = meter.create_histogram("flask_request_latency_seconds", "Request latency")
+IN_PROGRESS = meter.create_up_down_counter("flask_inprogress_requests", "Requests in progress")
 
-def cpu_usage_callback(observer):
-    observer.observe(random.uniform(5, 95))
+def cpu_usage_cb(obs):
+    obs.observe(random.uniform(5, 95))
+CPU_USAGE = meter.create_observable_gauge("flask_cpu_usage_percent", callbacks=[cpu_usage_cb])
 
-def memory_usage_callback(observer):
-    observer.observe(random.uniform(50, 500))
+def mem_usage_cb(obs):
+    obs.observe(random.uniform(50, 500))
+MEMORY_USAGE = meter.create_observable_gauge("flask_memory_usage_mb", callbacks=[mem_usage_cb])
 
-CPU_USAGE = meter.create_observable_gauge("flask_cpu_usage_percent", callbacks=[cpu_usage_callback])
-MEMORY_USAGE = meter.create_observable_gauge("flask_memory_usage_mb", callbacks=[memory_usage_callback])
+WORK_SUMMARY = meter.create_histogram("flask_work_time_seconds", "Work endpoint duration")
 
-WORK_SUMMARY = meter.create_histogram("flask_work_time_seconds", description="Time taken for /work endpoint")
-
-# ----------------
 # Routes
-# ----------------
 @app.route("/")
 def home():
     endpoint = "/"
     REQUEST_COUNT.add(1, {"endpoint": endpoint})
     IN_PROGRESS.add(1, {"endpoint": endpoint})
-    start = time.time()
-    time.sleep(random.uniform(0.1, 0.5))
-    duration = time.time() - start
+    duration = random.uniform(0.1, 0.5)
+    time.sleep(duration)
     REQUEST_LATENCY.record(duration, {"endpoint": endpoint})
     IN_PROGRESS.add(-1, {"endpoint": endpoint})
 
     html = """
-    <h1>Hello from Flask Metrics Demo (OTel)!</h1>
+    <h1>Hello from Flask Metrics Demo (OTel)</h1>
     <ul>
-        <li><a href="/metrics">Metrics</a></li>
-        <li><a href="/work">Work</a></li>
-        <li><a href="/error">Error</a></li>
+      <li><a href="/work">Work</a></li>
+      <li><a href="/error">Error</a></li>
+      <li><a href="/metrics">Metrics</a></li>
     </ul>
     """
     return Response(html, mimetype="text/html")
-
 
 @app.route("/work")
 def work():
@@ -80,28 +69,15 @@ def work():
     IN_PROGRESS.add(-1, {"endpoint": endpoint})
     return f"Work completed in {sleep_time:.2f} seconds"
 
-
 @app.route("/error")
 def error():
-    endpoint = "/error"
-    REQUEST_COUNT.add(1, {"endpoint": endpoint})
-    raise Exception("Simulated failure in /error")
+    REQUEST_COUNT.add(1, {"endpoint": "/error"})
+    raise Exception("Simulated failure")
 
+# Combine Flask + Prometheus exporter
+app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
+    "/metrics": make_wsgi_app()
+})
 
-# ----------------
-# Prometheus Metrics Endpoint
-# ----------------
-# The PrometheusMetricReader provides a WSGI app for scraping metrics
-from werkzeug.wrappers import Response as WSGIResponse
-
-@app.route("/metrics")
-def metrics_endpoint():
-    wsgi_app = prom_reader._server_app  # internal WSGI app
-    response = WSGIResponse.from_app(wsgi_app, request.environ)
-    return response
-
-# ----------------
-# Main
-# ----------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
