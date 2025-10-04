@@ -1,5 +1,9 @@
 version: "3.8"
+
 services:
+  # ----------------
+  # MinIO for Mimir storage
+  # ----------------
   minio:
     image: minio/minio
     entrypoint: [""]
@@ -12,6 +16,9 @@ services:
     networks:
       - monitoring
 
+  # ----------------
+  # Flask App with OTEL
+  # ----------------
   flask-app:
     build: ./flask-app-otel
     environment:
@@ -22,22 +29,24 @@ services:
       - "5000:5000"
     networks:
       - monitoring
-    depends_on:
-      - otel-collector
 
+  # ----------------
+  # OpenTelemetry Collector
+  # ----------------
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
-      - "4317:4317"
-      - "8888:8888"
+      - "4317:4317"   # OTLP gRPC
+      - "8888:8888"   # Prometheus scrape endpoint
     networks:
       - monitoring
-    depends_on:
-      - flask-app
 
+  # ----------------
+  # Prometheus
+  # ----------------
   prometheus:
     image: prom/prometheus:latest
     command:
@@ -45,11 +54,17 @@ services:
       - --storage.tsdb.path=/prometheus
     volumes:
       - ./config/prometheus-otel.yaml:/etc/prometheus/prometheus.yml
-    networks:
-      - monitoring
+      - ./operations/rules.yaml:/etc/prometheus/rules.yaml
+    ports:
+      - "9090:9090"
     depends_on:
       - otel-collector
+    networks:
+      - monitoring
 
+  # ----------------
+  # Grafana
+  # ----------------
   grafana:
     image: grafana/grafana:latest
     environment:
@@ -59,26 +74,33 @@ services:
       - ./config/grafana-provisioning-dashboards.yaml:/etc/grafana/provisioning/dashboards/provisioning-dashboards.yaml:ro
       - ./config/grafana-provisioning-datasources.yaml:/etc/grafana/provisioning/datasources/provisioning-datasources.yaml:ro
       - ./operations/flask-app-metrics.json:/var/lib/grafana/dashboards/flask-app-metrics.json:ro
+      - ./operations/mimir-alertmanager.json:/var/lib/grafana/dashboards/mimir-alertmanager.json:ro
     ports:
       - "9000:3000"
-    networks:
-      - monitoring
     depends_on:
       - prometheus
+    networks:
+      - monitoring
 
+  # ----------------
+  # Load Balancer for Mimir Remote Write
+  # ----------------
   load-balancer:
     image: nginx:latest
     volumes:
       - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "9009:9009"
-    networks:
-      - monitoring
     depends_on:
       - mimir-1
       - mimir-2
       - mimir-3
+    networks:
+      - monitoring
 
+  # ----------------
+  # Mimir 3-node cluster
+  # ----------------
   mimir-1:
     image: grafana/mimir:latest
     command: ["-config.file=/etc/mimir.yaml"]
@@ -87,6 +109,7 @@ services:
       - minio
     volumes:
       - ./config/mimir.yaml:/etc/mimir.yaml
+      - ./config/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml
       - mimir-1-data:/data
     networks:
       - monitoring
@@ -99,6 +122,7 @@ services:
       - minio
     volumes:
       - ./config/mimir.yaml:/etc/mimir.yaml
+      - ./config/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml
       - mimir-2-data:/data
     networks:
       - monitoring
@@ -111,6 +135,7 @@ services:
       - minio
     volumes:
       - ./config/mimir.yaml:/etc/mimir.yaml
+      - ./config/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml
       - mimir-3-data:/data
     networks:
       - monitoring
