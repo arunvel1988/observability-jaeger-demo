@@ -36,6 +36,8 @@ WORK_SUMMARY = Summary("flask_work_time_seconds", "Time taken for /work endpoint
 # ----------------
 # Routes
 # ----------------
+from flask import Response
+
 @app.route("/")
 def home():
     endpoint = "/"
@@ -54,8 +56,7 @@ def home():
     logger.info("Home endpoint hit", extra={"latency": duration})
     IN_PROGRESS.labels(endpoint=endpoint).dec()
 
-    # HTML with links
-    return """
+    html = """
     <h1>Hello from Flask Metrics Demo!</h1>
     <ul>
         <li><a href="/metrics">Metrics</a></li>
@@ -63,6 +64,8 @@ def home():
         <li><a href="/error">Error</a></li>
     </ul>
     """
+    return Response(html, mimetype="text/html")
+
 
 @app.route("/work")
 def work():
