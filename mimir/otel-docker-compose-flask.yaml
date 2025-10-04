@@ -29,7 +29,7 @@ services:
       - --web.console.libraries=/usr/share/prometheus/console_libraries
       - --web.console.templates=/usr/share/prometheus/consoles
     volumes:
-      - ./config/prometheus.yaml:/etc/prometheus/prometheus.yml
+      - ./config/prometheus-otel.yaml:/etc/prometheus/prometheus.yml
       - ./operations/rules.yaml:/etc/prometheus/rules.yaml
     depends_on:
       - flask-app
