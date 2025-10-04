@@ -4,16 +4,19 @@ receivers:
       grpc:
       http:
 
+processors:
+  batch:
+
 exporters:
+  # Local scrape endpoint for debugging
   prometheus:
-    endpoint: "0.0.0.0:8889" # optional scrape endpoint for debugging
+    endpoint: "0.0.0.0:8889"
+
+  # Correct exporter for Mimir
   prometheusremotewrite/mimir:
     endpoint: "http://load-balancer:9009/api/v1/push"
     headers:
       X-Scope-OrgID: demo
-
-processors:
-  batch:
 
 service:
   pipelines:
