@@ -10,33 +10,42 @@ from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
-# Flask app
+# ----------------
+# Flask Setup
+# ----------------
 app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
 logging.basicConfig(level=logging.INFO)
 
-# OTel Metrics
-reader = PrometheusMetricReader()
+# ----------------
+# OpenTelemetry Metrics
+# ----------------
+reader = PrometheusMetricReader()  # exporter
 provider = MeterProvider(metric_readers=[reader])
 metrics.set_meter_provider(provider)
 meter = metrics.get_meter(__name__)
 
-# Metrics definitions
+# Counter for total requests
 REQUEST_COUNT = meter.create_counter("flask_request_count_total", "Total requests")
+# Histogram for request latency
 REQUEST_LATENCY = meter.create_histogram("flask_request_latency_seconds", "Request latency")
+# UpDownCounter for in-progress requests
 IN_PROGRESS = meter.create_up_down_counter("flask_inprogress_requests", "Requests in progress")
 
-def cpu_usage_cb(obs):
+# Observable gauges
+def cpu_cb(obs):
     obs.observe(random.uniform(5, 95))
-CPU_USAGE = meter.create_observable_gauge("flask_cpu_usage_percent", callbacks=[cpu_usage_cb])
+CPU_USAGE = meter.create_observable_gauge("flask_cpu_usage_percent", callbacks=[cpu_cb])
 
-def mem_usage_cb(obs):
+def mem_cb(obs):
     obs.observe(random.uniform(50, 500))
-MEMORY_USAGE = meter.create_observable_gauge("flask_memory_usage_mb", callbacks=[mem_usage_cb])
+MEMORY_USAGE = meter.create_observable_gauge("flask_memory_usage_mb", callbacks=[mem_cb])
 
 WORK_SUMMARY = meter.create_histogram("flask_work_time_seconds", "Work endpoint duration")
 
+# ----------------
 # Routes
+# ----------------
 @app.route("/")
 def home():
     endpoint = "/"
@@ -74,9 +83,11 @@ def error():
     REQUEST_COUNT.add(1, {"endpoint": "/error"})
     raise Exception("Simulated failure")
 
-# Combine Flask + Prometheus exporter
+# ----------------
+# Expose metrics to Prometheus / Grafana
+# ----------------
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
-    "/metrics": make_wsgi_app()
+    "/metrics": make_wsgi_app()  # exposes OTel metrics in Prometheus format
 })
 
 if __name__ == "__main__":
