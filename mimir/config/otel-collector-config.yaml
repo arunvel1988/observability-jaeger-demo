@@ -7,7 +7,7 @@ receivers:
 
 exporters:
   prometheus:
-    endpoint: "0.0.0.0:8888" # optional scrape endpoint
+    endpoint: "0.0.0.0:8889" # optional scrape endpoint
   otlp/mimir:
     endpoint: "http://load-balancer:9009" # your Mimir load balancer
     headers:
