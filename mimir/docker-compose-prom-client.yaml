@@ -49,6 +49,16 @@ services:
       - ./config/grafana-provisioning-dashboards.yaml:/etc/grafana/provisioning/dashboards/provisioning-dashboards.yaml:ro
       - ./config/grafana-provisioning-datasources.yaml:/etc/grafana/provisioning/datasources/provisioning-datasources.yaml:ro
       - ./operations/flask-app-metrics.json:/var/lib/grafana/dashboards/flask-app-metrics.json:ro
+      - ./operations/mimir-alertmanager.json:/var/lib/grafana/dashboards/mimir-alertmanager.json:ro
+      - ./operations/mimir-compactor.json:/var/lib/grafana/dashboards/mimir-compactor.json:ro
+      - ./operations/mimir-object-store.json:/var/lib/grafana/dashboards/mimir-object-store.json:ro
+      - ./operations/mimir-overrides.json:/var/lib/grafana/dashboards/mimir-overrides.json:ro
+      - ./operations/mimir-queries.json:/var/lib/grafana/dashboards/mimir-queries.json:ro
+      - ./operations/mimir-reads.json:/var/lib/grafana/dashboards/mimir-reads.json:ro
+      - ./operations/mimir-ruler.json:/var/lib/grafana/dashboards/mimir-ruler.json:ro
+      - ./operations/mimir-tenants.json:/var/lib/grafana/dashboards/mimir-tenants.json:ro
+      - ./operations/mimir-top-tenants.json:/var/lib/grafana/dashboards/mimir-top-tenants.json:ro
+      - ./operations/mimir-writes.json:/var/lib/grafana/dashboards/mimir-writes.json:ro
 
     ports:
       - 9000:3000
