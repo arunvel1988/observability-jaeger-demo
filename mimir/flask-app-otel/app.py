@@ -4,11 +4,10 @@ import logging
 from flask import Flask, Response
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
-from prometheus_client import make_wsgi_app
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.exporter.prometheus import start_http_server
 
 # ----------------
 # Flask Setup
@@ -16,23 +15,26 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("flask-app")
 
 # ----------------
-# OpenTelemetry Metrics
+# OpenTelemetry Metrics Setup
 # ----------------
-reader = PrometheusMetricReader()  # exporter
-provider = MeterProvider(metric_readers=[reader])
+# Start Prometheus-compatible metrics server on port 8000
+prom_reader = PrometheusMetricReader()
+start_http_server(port=8000)
+
+provider = MeterProvider(metric_readers=[prom_reader])
 metrics.set_meter_provider(provider)
 meter = metrics.get_meter(__name__)
 
-# Counter for total requests
+# ----------------
+# Metrics Definitions
+# ----------------
 REQUEST_COUNT = meter.create_counter("flask_request_count_total", "Total requests")
-# Histogram for request latency
 REQUEST_LATENCY = meter.create_histogram("flask_request_latency_seconds", "Request latency")
-# UpDownCounter for in-progress requests
 IN_PROGRESS = meter.create_up_down_counter("flask_inprogress_requests", "Requests in progress")
 
-# Observable gauges
 def cpu_cb(obs):
     obs.observe(random.uniform(5, 95))
 CPU_USAGE = meter.create_observable_gauge("flask_cpu_usage_percent", callbacks=[cpu_cb])
@@ -44,7 +46,7 @@ MEMORY_USAGE = meter.create_observable_gauge("flask_memory_usage_mb", callbacks=
 WORK_SUMMARY = meter.create_histogram("flask_work_time_seconds", "Work endpoint duration")
 
 # ----------------
-# Routes
+# Flask Routes
 # ----------------
 @app.route("/")
 def home():
@@ -61,7 +63,7 @@ def home():
     <ul>
       <li><a href="/work">Work</a></li>
       <li><a href="/error">Error</a></li>
-      <li><a href="/metrics">Metrics</a></li>
+      <li>Metrics exposed on <a href="http://localhost:8000/metrics">http://localhost:8000/metrics</a></li>
     </ul>
     """
     return Response(html, mimetype="text/html")
@@ -84,11 +86,9 @@ def error():
     raise Exception("Simulated failure")
 
 # ----------------
-# Expose metrics to Prometheus / Grafana
+# Main
 # ----------------
-app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
-    "/metrics": make_wsgi_app()  # exposes OTel metrics in Prometheus format
-})
-
 if __name__ == "__main__":
+    logger.info("Starting Flask app on port 5000")
+    logger.info("Prometheus metrics exposed on port 8000 at /metrics")
     app.run(host="0.0.0.0", port=5000)
