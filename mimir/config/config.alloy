@@ -1,52 +1,51 @@
-// ----------------
+// ---------------------------
 // Receiver: OTLP from Flask
-// ----------------
-otelcol.receiver.otlp "flask" {
-  grpc {
-    endpoint = "0.0.0.0:4317"
-  }
-  http {
-    endpoint = "0.0.0.0:4318"
-  }
-
-  output {
-    metrics = [otelcol.processor.batch.default.input]
+// ---------------------------
+otlp.receiver "flask_metrics" {
+  protocols = {
+    grpc = { endpoint = "0.0.0.0:4317" }
+    http = { endpoint = "0.0.0.0:4318" }
   }
 }
 
-// ----------------
+// ---------------------------
 // Batch Processor
-// ----------------
-otelcol.processor.batch "default" {
+// ---------------------------
+batch.processor "default" {
   timeout         = "5s"
   send_batch_size = 100
-
-  output {
-    metrics = [otelcol.exporter.prometheusremotewrite.mimir.input]
-  }
 }
 
-// ----------------
+// ---------------------------
 // Exporter: Mimir Remote Write
-// ----------------
-otelcol.exporter.prometheusremotewrite "mimir" {
+// ---------------------------
+prometheus.remotewrite.exporter "mimir" {
   endpoint = "http://load-balancer:9009/api/v1/push"
   headers = {
-    "X-Scope-OrgID" = "demo",
+    "X-Scope-OrgID" = "demo"
   }
 }
 
-// ----------------
-// Optional Prometheus scraping endpoint
-// ----------------
-otelcol.exporter.prometheus "local" {
-  endpoint            = "0.0.0.0:8889"
-  enable_open_metrics = true
+// ---------------------------
+// Pipeline connecting receiver → processor → exporter
+// ---------------------------
+pipeline "metrics_pipeline" {
+  input = [otlp.receiver.flask_metrics.output]
+  processors = [batch.processor.default.output]
+  output = [prometheus.remotewrite.exporter.mimir.input]
 }
 
-// ----------------
+// ---------------------------
+// Optional Prometheus scraping endpoint
+// ---------------------------
+prometheus.receiver "local_scrape" {
+  listen_address = "0.0.0.0:8889"
+  metrics_path   = "/metrics"
+}
+
+// ---------------------------
 // Live debugging
-// ----------------
+// ---------------------------
 livedebugging {
   enabled = true
 }
