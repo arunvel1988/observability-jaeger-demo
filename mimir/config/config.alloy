@@ -18,13 +18,21 @@ prometheus.remote_write "mimir" {
   }
 }
 
-// ---------- Service Pipeline ----------
-otelcol.service "metrics" {
-  pipelines {
-    metrics = [
-      otelcol.receiver.otlp.flask.output,
-      otelcol.processor.batch.default.input,
-      prometheus.remote_write.mimir.receiver,
-    ]
+// ---------- Pipeline (Replaces 'otelcol.service') ----------
+otelcol.connector.forward "to_batch" {
+  input {
+    metrics = [otelcol.receiver.otlp.flask.output]
+  }
+  output {
+    metrics = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.connector.forward "to_exporter" {
+  input {
+    metrics = [otelcol.processor.batch.default.output]
+  }
+  output {
+    metrics = [prometheus.remote_write.mimir.receiver]
   }
 }
