@@ -35,7 +35,7 @@ services:
   # ----------------
   alloy:
     image: grafana/alloy:latest
-    command: ["--config.file=/etc/alloy.yaml"]
+    command: ["run", "/etc/alloy/alloy.alloy"]
     volumes:
       - ./config/alloy.yaml:/etc/alloy.yaml
     ports:
