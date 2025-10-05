@@ -1,28 +1,32 @@
-// ---------- Receiver ----------
+// ---------- Receiver (OTLP from Flask) ----------
 otelcol.receiver.otlp "flask" {
-  protocols {
-    grpc { endpoint = "0.0.0.0:4317" }
-    http { endpoint = "0.0.0.0:4318" }
+  protocols = {
+    grpc = { endpoint = "0.0.0.0:4317" }
+    http = { endpoint = "0.0.0.0:4318" }
   }
 }
 
-// ---------- Processor ----------
-otelcol.processor.batch "default" {}
+// ---------- Processor (Batching) ----------
+otelcol.processor.batch "default" {
+  timeout = "5s"
+  send_batch_size = 100
+}
 
-// ---------- Exporter ----------
-prometheus.remote_write "mimir" {
-  endpoint {
-    url = "http://load-balancer:9009/api/v1/push"
+// ---------- Exporter (Mimir Remote Write) ----------
+otelcol.exporter.prometheusremotewrite "mimir" {
+  endpoint = "http://load-balancer:9009/api/v1/push"
+  headers = {
+    "X-Scope-OrgID" = "demo"
   }
 }
 
-// ---------- Service ----------
-otelcol.service "metrics" {
-  pipelines {
-    metrics = [
-      otelcol.receiver.otlp.flask.output,
-      otelcol.processor.batch.default.input,
-      prometheus.remote_write.mimir.receiver,
-    ]
-  }
+// ---------- Connector Pipeline ----------
+otelcol.connector.forward "to_batch" {
+  input = [otelcol.receiver.otlp.flask]
+  output = [otelcol.processor.batch.default]
+}
+
+otelcol.connector.forward "to_exporter" {
+  input = [otelcol.processor.batch.default]
+  output = [otelcol.exporter.prometheusremotewrite.mimir]
 }
