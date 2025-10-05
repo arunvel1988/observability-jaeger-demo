@@ -1,5 +1,5 @@
 // ----------------
-// Receiver: OTLP for Flask
+// Receiver: OTLP from Flask
 // ----------------
 otelcol.receiver.otlp "flask" {
   grpc {
@@ -37,10 +37,10 @@ otelcol.exporter.prometheusremotewrite "mimir" {
 }
 
 // ----------------
-// Optional local Prometheus endpoint
+// Optional Prometheus scraping endpoint
 // ----------------
 otelcol.exporter.prometheus "local" {
-  endpoint           = "0.0.0.0:8889"
+  endpoint            = "0.0.0.0:8889"
   enable_open_metrics = true
 }
 
