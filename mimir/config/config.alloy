@@ -1,10 +1,8 @@
 // ---------- Receiver ----------
 otelcol.receiver.otlp "flask" {
-  grpc {
-    endpoint = "0.0.0.0:4317"
-  }
-  http {
-    endpoint = "0.0.0.0:4318"
+  protocols {
+    grpc { endpoint = "0.0.0.0:4317" }
+    http { endpoint = "0.0.0.0:4318" }
   }
 }
 
@@ -18,10 +16,13 @@ prometheus.remote_write "mimir" {
   }
 }
 
-// ---------- Graph Pipeline ----------
-graph "default" {
-  edges = [
-    { from = otelcol.receiver.otlp.flask.metrics, to = otelcol.processor.batch.default.input },
-    { from = otelcol.processor.batch.default.output, to = prometheus.remote_write.mimir.receiver },
-  ]
+// ---------- Service ----------
+otelcol.service "metrics" {
+  pipelines {
+    metrics = [
+      otelcol.receiver.otlp.flask.output,
+      otelcol.processor.batch.default.input,
+      prometheus.remote_write.mimir.receiver,
+    ]
+  }
 }
