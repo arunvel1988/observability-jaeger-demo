@@ -1,0 +1,30 @@
+// ---------- Receivers ----------
+otelcol.receiver.otlp "flask" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+}
+
+// ---------- Processor ----------
+otelcol.processor.batch "default" {}
+
+// ---------- Exporter ----------
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "http://load-balancer:9009/api/v1/push"
+  }
+}
+
+// ---------- Service Pipeline ----------
+otelcol.service "metrics" {
+  pipelines {
+    metrics = [
+      otelcol.receiver.otlp.flask.output,
+      otelcol.processor.batch.default.input,
+      prometheus.remote_write.mimir.receiver,
+    ]
+  }
+}
