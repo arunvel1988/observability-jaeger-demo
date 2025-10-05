@@ -32,7 +32,7 @@ otelcol.processor.batch "default" {
 otelcol.exporter.prometheusremotewrite "mimir" {
   endpoint = "http://load-balancer:9009/api/v1/push"
   headers = {
-    "X-Scope-OrgID" = "demo"
+    "X-Scope-OrgID" = "demo",
   }
 }
 
