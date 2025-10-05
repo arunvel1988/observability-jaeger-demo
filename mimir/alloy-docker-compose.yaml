@@ -35,15 +35,16 @@ services:
   # ----------------
   alloy:
     image: grafana/alloy:latest
-    command: ["run", "/etc/alloy.yaml"]
+    command: ["run", "/etc/alloy/config.alloy"]
     volumes:
-      - ./config/alloy.yaml:/etc/alloy.yaml
+      - ./config/alloy/config.alloy:/etc/alloy/config.alloy
     ports:
       - "4317:4317"   # OTLP gRPC from Flask
-      - "4318:4318"   # OTLP HTTP from Flask (optional)
-      - "8889:8889"   # Prometheus scrape endpoint
+      - "4318:4318"   # OTLP HTTP (optional)
+      - "8889:8889"   # Prometheus scrape endpoint for Alloy
     networks:
       - monitoring
+
 
   # ----------------
   # Grafana
