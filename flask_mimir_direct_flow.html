@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask → Mimir Direct Flow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #7950f2 0%, #5f3dc4 100%);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .header p {
+            font-size: 20px;
+            opacity: 0.95;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe8cc 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 3px solid #fd7e14;
+            text-align: center;
+        }
+
+        .highlight-box h2 {
+            color: #d9480f;
+            font-size: 26px;
+            margin-bottom: 10px;
+        }
+
+        .highlight-box p {
+            color: #495057;
+            font-size: 17px;
+            line-height: 1.8;
+        }
+
+        .flow-diagram {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border: 3px solid #495057;
+        }
+
+        .flow-diagram h2 {
+            text-align: center;
+            color: #212529;
+            font-size: 32px;
+            margin-bottom: 35px;
+        }
+
+        .flow-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .flow-box {
+            background: white;
+            padding: 25px 40px;
+            border-radius: 12px;
+            border: 4px solid;
+            text-align: center;
+            min-width: 350px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            transition: transform 0.3s;
+        }
+
+        .flow-box:hover {
+            transform: scale(1.05);
+        }
+
+        .flow-box h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .flow-box p {
+            font-size: 14px;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .flow-arrow {
+            font-size: 48px;
+            color: #495057;
+            font-weight: bold;
+        }
+
+        .flow-label {
+            background: #495057;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .flask-box {
+            border-color: #1971c2;
+            background: linear-gradient(135deg, #e7f5ff 0%, #d0ebff 100%);
+        }
+        .flask-box h3 { color: #1864ab; }
+
+        .distributor-box {
+            border-color: #fab005;
+            background: linear-gradient(135deg, #fff3bf 0%, #ffec99 100%);
+        }
+        .distributor-box h3 { color: #e67700; }
+
+        .ingester-box {
+            border-color: #7950f2;
+            background: linear-gradient(135deg, #e5dbff 0%, #d0bfff 100%);
+        }
+        .ingester-box h3 { color: #5f3dc4; }
+
+        .s3-box {
+            border-color: #37b24d;
+            background: linear-gradient(135deg, #d3f9d8 0%, #b2f2bb 100%);
+        }
+        .s3-box h3 { color: #2b8a3e; }
+
+        .compactor-box {
+            border-color: #fd7e14;
+            background: linear-gradient(135deg, #ffe8cc 0%, #ffd8a8 100%);
+        }
+        .compactor-box h3 { color: #d9480f; }
+
+        .query-box {
+            border-color: #e03131;
+            background: linear-gradient(135deg, #ffe3e3 0%, #ffc9c9 100%);
+        }
+        .query-box h3 { color: #c92a2a; }
+
+        .grafana-box {
+            border-color: #cc5de8;
+            background: linear-gradient(135deg, #f3d9fa 0%, #eebefa 100%);
+        }
+        .grafana-box h3 { color: #9c36b5; }
+
+        .step-section {
+            margin-bottom: 40px;
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            border: 3px solid;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 4px solid;
+        }
+
+        .step-number {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin-right: 25px;
+            flex-shrink: 0;
+        }
+
+        .step-title h2 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .step-title p {
+            font-size: 16px;
+            opacity: 0.85;
+        }
+
+        .info-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid;
+        }
+
+        .info-box h4 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: #212529;
+        }
+
+        .info-box p, .info-box li {
+            color: #495057;
+            font-size: 15px;
+            line-height: 1.7;
+            margin: 8px 0;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+        }
+
+        .code-box {
+            background: #212529;
+            color: #51cf66;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 15px 0;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.6;
+        }
+
+        /* Step Colors */
+        .step-1 { background: linear-gradient(135deg, #e7f5ff 0%, #d0ebff 100%); border-color: #1971c2; }
+        .step-1 .step-header { border-color: #1971c2; }
+        .step-1 .step-number { background: #1971c2; }
+        .step-1 .step-title h2 { color: #1864ab; }
+        .step-1 .info-box { border-left-color: #1971c2; }
+
+        .step-2 { background: linear-gradient(135deg, #d0ebff 0%, #b8daff 100%); border-color: #1864ab; }
+        .step-2 .step-header { border-color: #1864ab; }
+        .step-2 .step-number { background: #1864ab; }
+        .step-2 .step-title h2 { color: #1864ab; }
+        .step-2 .info-box { border-left-color: #1864ab; }
+
+        .step-3 { background: linear-gradient(135deg, #fff3bf 0%, #ffec99 100%); border-color: #fab005; }
+        .step-3 .step-header { border-color: #fab005; }
+        .step-3 .step-number { background: #fab005; }
+        .step-3 .step-title h2 { color: #e67700; }
+        .step-3 .info-box { border-left-color: #fab005; }
+
+        .step-4 { background: linear-gradient(135deg, #e5dbff 0%, #d0bfff 100%); border-color: #7950f2; }
+        .step-4 .step-header { border-color: #7950f2; }
+        .step-4 .step-number { background: #7950f2; }
+        .step-4 .step-title h2 { color: #5f3dc4; }
+        .step-4 .info-box { border-left-color: #7950f2; }
+
+        .step-5 { background: linear-gradient(135deg, #d3f9d8 0%, #b2f2bb 100%); border-color: #37b24d; }
+        .step-5 .step-header { border-color: #37b24d; }
+        .step-5 .step-number { background: #37b24d; }
+        .step-5 .step-title h2 { color: #2b8a3e; }
+        .step-5 .info-box { border-left-color: #37b24d; }
+
+        .step-6 { background: linear-gradient(135deg, #ffe8cc 0%, #ffd8a8 100%); border-color: #fd7e14; }
+        .step-6 .step-header { border-color: #fd7e14; }
+        .step-6 .step-number { background: #fd7e14; }
+        .step-6 .step-title h2 { color: #d9480f; }
+        .step-6 .info-box { border-left-color: #fd7e14; }
+
+        .step-7 { background: linear-gradient(135deg, #ffe3e3 0%, #ffc9c9 100%); border-color: #e03131; }
+        .step-7 .step-header { border-color: #e03131; }
+        .step-7 .step-number { background: #e03131; }
+        .step-7 .step-title h2 { color: #c92a2a; }
+        .step-7 .info-box { border-left-color: #e03131; }
+
+        .step-8 { background: linear-gradient(135deg, #f3d9fa 0%, #eebefa 100%); border-color: #cc5de8; }
+        .step-8 .step-header { border-color: #cc5de8; }
+        .step-8 .step-number { background: #cc5de8; }
+        .step-8 .step-title h2 { color: #9c36b5; }
+        .step-8 .info-box { border-left-color: #cc5de8; }
+
+        .key-notes {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe3e3 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border: 3px solid #e03131;
+        }
+
+        .key-notes h2 {
+            color: #c92a2a;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .key-notes ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .key-notes li {
+            padding: 12px 0;
+            color: #495057;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .key-notes li::before {
+            content: "🔹";
+            margin-right: 12px;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .summary-section h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .summary-section .flow-text {
+            background: rgba(255,255,255,0.15);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+            font-size: 16px;
+            line-height: 2;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 Flask → Mimir Direct Flow</h1>
+            <p>No Prometheus in Between - Direct Push to Mimir</p>
+        </div>
+
+        <!-- Highlight -->
+        <div class="highlight-box">
+            <h2>⚡ Direct Metrics Push</h2>
+            <p>This flow shows how Flask can push metrics <strong>directly to Mimir</strong> without needing Prometheus as an intermediary. Flask uses the Prometheus Python client with remote_write capability to send metrics straight to Mimir's Distributor.</p>
+        </div>
+
+        <!-- Flow Diagram -->
+        <div class="flow-diagram">
+            <h2>📊 Complete Direct Flow</h2>
+            <div class="flow-visual">
+                <div class="flow-box flask-box">
+                    <h3>1️⃣ Flask App</h3>
+                    <p>Generates metrics & exposes /metrics</p>
+                    <p><strong>Prometheus Python Client</strong></p>
+                </div>
+
+                <div class="flow-arrow">⬇️</div>
+                <div class="flow-label">HTTP POST (Snappy compressed protobuf)</div>
+                <div class="flow-arrow">⬇️</div>
+
+                <div class="flow-box distributor-box">
+                    <h3>2️⃣ Mimir Distributor</h3>
+                    <p>Front desk - routes metrics</p>
+                    <p><strong>:9009/api/v1/push</strong></p>
+                </div>
+
+                <div class="flow-arrow">⬇️</div>
+                <div class="flow-label">gRPC forwarding (with replication)</div>
+                <div class="flow-arrow">⬇️</div>
+
+                <div class="flow-box ingester-box">
+                    <h3>3️⃣ Mimir Ingester</h3>
+                    <p>In-memory storage + WAL</p>
+                    <p><strong>Recent data (fast queries)</strong></p>
+                </div>
+
+                <div class="flow-arrow">⬇️</div>
+                <div class="flow-label">Periodic block upload (every ~2 hours)</div>
+                <div class="flow-arrow">⬇️</div>
+
+                <div class="flow-box s3-box">
+                    <h3>4️⃣ S3 Storage</h3>
+                    <p>Long-term immutable blocks</p>
+                    <p><strong>Compressed chunks + index</strong></p>
+                </div>
+
+                <div class="flow-arrow">⬇️</div>
+                <div class="flow-label">Background processing</div>
+                <div class="flow-arrow">⬇️</div>
+
+                <div class="flow-box compactor-box">
+                    <h3>5️⃣ Mimir Compactor</h3>
+                    <p>Merges & cleans blocks</p>
+                    <p><strong>Enforces retention</strong></p>
+                </div>
+
+                <div style="margin: 30px 0; text-align: center; font-size: 24px; color: #495057; font-weight: bold;">
+                    ━━━━━━ Query Path ━━━━━━
+                </div>
+
+                <div class="flow-box query-box">
+                    <h3>6️⃣ Query Frontend & Querier</h3>
+                    <p>Fetches from Ingester + Store Gateway</p>
+                    <p><strong>Merges recent + historical</strong></p>
+                </div>
+
+                <div class="flow-arrow">⬆️</div>
+                <div class="flow-label">PromQL query</div>
+                <div class="flow-arrow">⬆️</div>
+
+                <div class="flow-box grafana-box">
+                    <h3>7️⃣ Grafana Dashboard</h3>
+                    <p>Visualizes metrics</p>
+                    <p><strong>Beautiful charts & alerts</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="step-section step-1">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">
+                    <h2>Flask App: Metrics Generation</h2>
+                    <p>Your Flask app generates and exposes metrics</p>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>📊 What Flask Does</h4>
+                <ul>
+                    <li>Generates metrics using <strong>Prometheus Python client</strong> (or OpenTelemetry)</li>
+                    <li>Tracks request counts, latencies, error rates, custom business metrics</li>
+                    <li>Exposes <code>/metrics</code> endpoint in Prometheus exposition format</li>
+                </ul>
+            </div>
+
+            <div class="code-box"># Flask exposes metrics at /metrics
+http_requests_total{method="GET",endpoint="/"} 42
+http_request_duration_seconds_bucket{le="0.1"} 10
+http_request_duration_seconds_bucket{le="0.5"} 25
+http_request_duration_seconds_count 30
+http_request_duration_seconds_sum 5.2</div>
+
+            <div class="info-box">
+                <h4>🔑 Key Point</h4>
+                <p>Flask itself only <strong>generates metrics</strong> - it doesn't store or persist them. The metrics exist in memory and are exposed for collection.</p>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-section step-2">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">
+                    <h2>Flask → Mimir: Sending Metrics</h2>
+                    <p>Direct push using Prometheus remote_write protocol</p>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>🔄 How Flask Pushes to Mimir</h4>
+                <p>You configure the Prometheus Python client to <strong>push metrics directly</strong> to Mimir using remote_write:</p>
+                <ul>
+                    <li>The Python client library batches metrics periodically</li>
+                    <li>Compresses them using <strong>Snappy</strong> compression (~70% size reduction)</li>
+                    <li>Sends via <strong>HTTP POST</strong> to Mimir Distributor endpoint</li>
+                </ul>
+            </div>
+
+            <div class="code-box"># Configuration in Flask
+from prometheus_client import CollectorRegistry, push_to_gateway
+
+# Push metrics directly to Mimir
+MIMIR_URL = "http://mimir-distributor:9009/api/v1/push"
+
+# The client handles:
+# - Batching samples
+# - Snappy compression
+# - HTTP POST with protobuf payload
+# - Retry logic on failures</div>
+
+            <div class="info-box">
+                <h4>📦 What Gets Sent</h4>
+                <div class="code-box" style="margin-top: 10px;">POST /api/v1/push HTTP/1.1
+Host: mimir-distributor:9009
+Content-Type: application/x-protobuf
+Content-Encoding: snappy
+X-Scope-OrgID: tenant-1
+
+[Snappy compressed protobuf WriteRequest with timeseries data]</div>
+            </div>
+
+            <div class="info-box">
+                <h4>⏱️ At This Stage</h4>
+                <ul>
+                    <li>Metrics are "in transit" from Flask to Mimir</li>
+                    <li>Mimir hasn't stored anything permanently yet</li>
+                    <li>Data exists in network packets and buffers</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-section step-3">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">
+                    <h2>Mimir Distributor: Routing</h2>
+                    <p>Front desk that routes metrics to storage</p>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>🎯 Distributor = Mimir's Front Desk / Router</h4>
+                <p>The Distributor is a stateless component that receives metrics and routes them intelligently.</p>
+            </div>
+
+            <div class="info-box">
+                <h4>🔄 What Distributor Does</h4>
+                <ul>
+                    <li><strong>Receives metrics from Flask:</strong> Accepts HTTP POST with compressed protobuf</li>
+                    <li><strong>Checks tenant ID:</strong> Multi-tenant support via <code>X-Scope-OrgID</code> header</li>
+                    <li><strong>Validates samples:</strong> Ensures metric names/labels are valid</li>
+                    <li><strong>Calculates hash:</strong> For each timeseries (metric + labels), computes a hash value</li>
+                    <li><strong>Determines Ingesters:</strong> Uses consistent hashing ring to decide which Ingester(s) should store each series</li>
+                    <li><strong>Forwards via gRPC:</strong> Sends metrics to ingesters, usually <strong>replicating to 3 ingesters</strong> for redundancy</li>
+                    <li><strong>Waits for quorum:</strong> Requires majority (2 out of 3) ingesters to acknowledge before returning success</li>
+                </ul>
+            </div>
+
+            <div class="code-box"># Pseudo-code for distribution logic
+for each timeseries in WriteRequest:
+    hash_value = consistent_hash(metric_name + labels)
+    ingesters = hash_ring.get_ingesters(hash_value, replication_factor=3)
+    
+    # Forward to ingesters via gRPC
+    responses = parallel_send_to_ingesters(ingesters, timeseries)
+    
+    # Check quorum (2 out of 3 must succeed)
+    if successful_responses >= 2:
+        return HTTP 200 OK
+    else:
+        return HTTP 500 Internal Server Error</div>
+
+            <div class="info-box">
+                <h4>🔑 Critical Point</h4>
+                <p><strong>Distributor does NOT store metrics</strong> - it only routes them reliably and enforces write consistency. It's completely stateless and can be scaled horizontally.</p>
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-section step-4">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <div class="step-title">
+                    <h2>Mimir Ingester: In-Memory Storage</h2>
+                    <p>Fast-access memory store for recent data</p>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>🎯 Ingester = Fast Recent Storage</h4>
+                <p>Ingesters are stateful components that hold recent metrics in RAM for lightning-fast queries.</p>
+            </div>
+
+            <div class="info-box">
+                <h4>🔄 What Happens Inside an Ingester</h4>
+                <ul>
+                    <li><strong>Stores metrics in RAM:</strong> Maintains per-tenant TSDB (Time Series Database) in memory</li>
+                    <li><strong>Writes WAL (Write-Ahead Log):</strong> Persists to disk for durability - survives crashes/restarts</li>
+                    <li><strong>Keeps appending:</strong> Continuously adds new samples as they arrive from Distributor</li>
+                    <li><strong>Periodic sealing (every ~2 hours):</strong>
+                        <ul>
+                            <li>Seals in-memory data into an immutable <strong>block</strong></li>
+                            <li>Compresses it (chunks + index + meta.json)</li>
+                            <li>Prepares block for upload to S3</li>
+                        </ul>
+                    </li>
+                    <li><strong>Background upload:</strong> Ships sealed blocks to S3 asynchronously</li>
+                    <li><strong>Local cleanup:</strong> After successful S3 upload, deletes local block copy (may keep cache)</li>
+                </ul>
+            </div>
+
+            <div class="code-box"># Ingester internal structure
+Ingester Memory:
+├── Tenant-1 TSDB (in-memory head)
+│   ├── Series: http_requests_total{method="GET"}
+│   │   └── Samples: [(ts1, 10), (ts2, 15), (ts3, 20)]
+│   ├── Series: http_request_duration_seconds{le="0.1"}
+│   │   └── Samples: [(ts1, 5), (ts2, 7), (ts3, 10)]
+│   └── ...
+│
+├── WAL (on disk)
+│   ├── 00000001.log  # Write-ahead log segments
+│   ├── 00000002.log
+│   └── checkpoint/
+│
+└── Blocks (sealed, ready for S3)
+    ├── 01HX.../
+    │   ├── chunks/
+    │   ├── index
+    │   └── meta.json
+    └── ...</div>
+
+            <div class="info-box">
+                <h4>🚀 Why Ingesters Matter</h4>
+                <p>Recent data is <strong>fast to query</strong> (RAM speed), while older data is prepared for cheap long-term storage (S3). This gives you both performance and cost-efficiency!</p>
+            </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-section step-5">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <div class="step-title">
+                    <h2>Mimir → S3: Long-Term Storage</h2>
+                    <p>Immutable blocks stored in object storage</p>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>☁️ What Gets Uploaded to S3</h4>
+                <ul>
+                    <li>Ingester uploads the <strong>sealed block</strong> to S3 bucket</li>
+                    <li>Each block represents a fixed <strong>time window</strong> (e.g., 2 hours of data)</li>
+                    <li>Blocks are <strong>immutable</strong> and <strong>compressed</strong></li>
+                    <li>Organized by tenant ID and block ID</li>
+                </ul>
+            </div>
+
+            <div class="code-box"># S3 bucket structure
+s3://mimir-bucket/
+└── tenants/
+    └── tenant-1/
+        └── blocks/
+            ├── 01HX5K2M3N4P5Q6R7S8T9U0V/
+            │   ├── chunks/
+            │   │   ├── 000001  # Compressed time-series data
+            │   │   ├── 000002
+            │   │   └── 000003
+            │   ├── index       # Series → chunk mapping (inverted index)
+            │   └── meta.json   # Block metadata
+            │       {
+            │         "ulid": "01HX5K2M3N4P5Q6R7S8T9U0V",
+            │         "minTime": 1696939200000,
+            │         "maxTime": 1696946400000,  # 2-hour window
+            │         "stats": {
+            │           "numSamples": 125000,
+            │           "numSeries": 500,
+            │           "numChunks": 2500
+            │         }
+            │       }
+            │
+            ├── 01HX5K9X8Y7W6V5U4T3S2R1Q/  # Next block
+            └── ...</div>
+
+            <div class="info-box">
+                <h4>💡 S3 Benefits</h4>
+                <ul>
+                    <li><strong>Durability:</strong> 99.999999999% (11 nines) durability</li>
+                    <li><strong>Cost-effective:</strong> ~$0.023/GB/month (much cheaper than SSD)</li>
+                    <li><strong>Scalability:</strong> Unlimited storage capacity</li>
+                    <li><strong>Immutability:</strong> Once written, blocks never change (safe for caching)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step-section step-6">
+            <div class="
